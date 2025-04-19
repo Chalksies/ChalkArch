@@ -257,10 +257,6 @@ environment_selector () {
     done
 }
 
-info_print "You selected: $DESKTOP_ENV"
-
-}
-
 
 # Script start
 echo -ne "${BOLD}${BPURPLE}
