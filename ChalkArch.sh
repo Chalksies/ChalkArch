@@ -316,9 +316,8 @@ sgdisk -Zo "$DISK" &>/dev/null
 input_print "Seperate the /home and root partitions? [Y/n]:"
 read -r home_partition_setting
 if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
+    SEPERATE_PARTITIONS=true
     while true; do
-
-        SEPERATE_PARTITIONS = true
         input_print "Size of the root partition? 25 to 50GiB is recommended. The rest of the disk will be used for the /home partition. Syntax: Parted syntax, only MiB and GiB. (40GiB, 40960MiB etc.)"
         read -r ROOTSIZE
 
@@ -442,6 +441,9 @@ microcode_detector
 # Pacstrap (setting up a base sytem onto the new root).
 info_print "Installing the base system (this might take a while)."
 pacstrap -K /mnt base "$kernel" "$microcode" linux-firmware "$kernel"-headers pipewire grub rsync efibootmgr zram-generator sudo nano htop wget &>/dev/null
+
+info_print "Installing DE/WM of choice (if chosen)"
+pacstrap -K /mnt base "$DESKTOP_ENV" &>/dev/null
 
 # Setting up the hostname.
 echo "$hostname" > /mnt/etc/hostname
