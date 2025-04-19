@@ -13,17 +13,17 @@ RESET='\e[0m'
 
 # Pretty print (function).
 info_print () {
-    echo -e "${BOLD}${BGREEN}[ ${BYELLOW}•${BGREEN} ] $1${RESET}"
+    echo -e "${BOLD}${BGREEN}| ${BYELLOW}+${BGREEN} | $1${RESET}"
 }
 
 # Pretty print for input (function).
 input_print () {
-    echo -ne "${BOLD}${BYELLOW}[ ${BGREEN}•${BYELLOW} ] $1${RESET}"
+    echo -ne "${BOLD}${BYELLOW}| ${BGREEN}+${BYELLOW} | $1${RESET}"
 }
 
 # Alert user of bad input (function).
 error_print () {
-    echo -e "${BOLD}${BRED}[ ${BBLUE}•${BRED} ] $1${RESET}"
+    echo -e "${BOLD}${BRED}| ${BBLUE}+${BRED} | $1${RESET}"
 }
 
 # Virtualization check (function).
@@ -169,7 +169,7 @@ microcode_detector () {
         info_print "An Intel CPU has been detected. The Intel microcode will be installed."
         microcode="intel-ucode"
     else
-        error_print "Your CPU is neither Intel nor AMD. If you are using an ARM CPU, please terminate this installation and try \"Arch Linux ARM\", a fork of Arch Linux designed for ARM CPUs"
+        error_print "Your CPU is neither Intel nor AMD. If you are using an ARM CPU, please terminate this installation and try \"Arch Linux ARM\", a fork of Arch Linux designed for ARM CPUs."
     fi
 }
 
@@ -221,6 +221,47 @@ keyboard_selector () {
     esac
 }
 
+environment_selector () {
+    info_print "Choose a desktop environment/window manager to install:"
+    PS3="Enter the number of your choice: "
+
+    options=("GNOME" "KDE Plasma" "XFCE" "Cinnamon" "MATE" "i3" "Sway" "[Other]" "[None (headless)]")
+    select de in "${options[@]}"; do
+        case $REPLY in
+            1) DESKTOP_ENV="gdm gnome gnome-tweaks"; break ;;
+            2) DESKTOP_ENV="sddm plasma-meta konsole kate dolphin ark plasma-workspace"; break ;;
+            3) DESKTOP_ENV="xorg-server xorg-apps lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings xfce4 xfce4-goodies pavucontrol gvfs xarchiver"; break ;;
+            4) DESKTOP_ENV="xorg-server xorg-apps lightdm slick-greeter cinnamon system-config-printer gnome-keyring gnome-terminal blueman bluez-utils engrampa gnome-screenshot gvfs-smb xed xdg-user-dirs-gtk"; break ;;
+            5) DESKTOP_ENV="xorg-server xorg-apps lightdm lightdm-gtk-greeter mate mate-extra"; break ;;
+            6) DESKTOP_ENV="xorg-server xorg-apps i3-wm i3lock i3status i3blocks xss-lock xterm lightdm-gtk-greeter lightdm dmenu"; break ;;
+            7) DESKTOP_ENV="sway swaybg swaylock swayidle waybar dmenu brightnessctl grim slurp pavucontrol foot xorg-xwayland polkit"; break ;;
+            8) DESKTOP_ENV="other"; break;;
+            9) DESKTOP_ENV=""; break ;;
+            *) echo "Invalid option. Please try again." ;;
+        esac
+    if [[ "$DESKTOP_ENV" == "other" ]]; then
+        while true; do
+            input_print "Enter the name of the DE/WM package you want to use (e.g. budgie, awesome, bspwm, etc.):"
+            read -r other_desktop
+
+            if pacman -Si "$other_desktop" &>/dev/null; then
+                DESKTOP_ENV="$other_desktop"
+                info_print "Package '$DESKTOP_ENV' found in the repositories and will be installed."
+
+                break
+            else
+                error_print "Package '$other_desktop' not found. Please try again."
+            fi
+        done
+    fi
+    done
+}
+
+info_print "You selected: $DESKTOP_ENV"
+
+}
+
+
 # Script start
 echo -ne "${BOLD}${BPURPLE}
 ========================================================================
@@ -243,12 +284,15 @@ PS3="Please select the number of the corresponding disk (e.g. 1): "
 select ENTRY in $(lsblk -dpnoNAME|grep -P "/dev/sd|nvme|vd");
 do
     DISK="$ENTRY"
-    info_print "Arch Linux will be installed on the following disk: $DISK"
+    info_print "ChalkArch will install Arch Linux on the following disk: $DISK"
     break
 done
 
 # Setting up the kernel.
 until kernel_selector; do : ; done
+
+# Choose DE/WM
+until environment_selector; do : ; done
 
 # User choses the network.
 until network_selector; do : ; done
@@ -275,59 +319,133 @@ sgdisk -Zo "$DISK" &>/dev/null
 
 input_print "Seperate the /home and root partitions? [Y/n]:"
 read -r home_partition_setting
-if ! [[ "${home_partition_setting}" =~ ^(no|n)$ ]]; then
-    input_print "Size of the root partition? 20 to 50GiB is recommended. The rest of the disk will be used for the /home partition. Syntax: 25GiB, 30GiB, 69GiB etc."
-    read -r ROOTSIZE
-    if ! [[ "$ROOTSIZE" == ""]]
-        error_print "Invalid syntax."
-        #BWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-    fi
+if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
+    while true; do
+
+        SEPERATE_PARTITIONS = true
+        input_print "Size of the root partition? 25 to 50GiB is recommended. The rest of the disk will be used for the /home partition. Syntax: Parted syntax, only MiB and GiB. (40GiB, 40960MiB etc.)"
+        read -r ROOTSIZE
+
+        if [[ "$ROOTSIZE" =~ ^([0-9]+)(MiB|GiB)$ ]]; then
+            SIZE_NUM=$(echo "$ROOTSIZE" | sed -E 's/^([0-9]+)(GiB|MiB)$/\1/')
+            SIZE_UNIT=$(echo "$ROOTSIZE" | sed -E 's/^([0-9]+)(GiB|MiB)$/\2/')
+
+            # Convert to GiB for checking
+            if [[ "$SIZE_UNIT" == "MiB" ]]; then
+                SIZE_GIB=$(awk "BEGIN { printf \"%.2f\", $SIZE_NUM / 1024 }")
+            else
+                SIZE_GIB="$SIZE_NUM"
+            fi
+
+            SIZE_GIB_CLEAN=$(echo "$SIZE_GIB" | tr -d '[:space:]')
+
+            if [[ "$SIZE_GIB_CLEAN" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+                SIZE_GIB_INT=$(printf "%.0f" "$SIZE_GIB_CLEAN")
+            else
+                error_print "Unexpected error parsing size. Please try again."
+                continue
+            fi
+
+            # Check if it's within range
+            if (( SIZE_GIB_INT < 25 || SIZE_GIB_INT > 50 )); then
+                info_print "You entered ${ROOTSIZE} (~${SIZE_GIB}GiB), which is outside the recommended 25-50GiB range."
+                input_print "Are you sure you want to continue with this size? Making a too small root partition might cause the installation to fail.[y/N]"
+                read -r confirm_size
+                if [[ "$confirm_size" =~ ^(y|Y|yes|Yes)$ ]]; then
+                    # Accept out-of-range value
+
+                    # Handle partition size for later.
+                    if [[ "$ROOTSIZE_UNIT" == GiB ]]; then
+                        ROOTSIZE_MIB=$(awk "BEGIN { print $ROOTSIZE_NUM * 1024 }")
+                    else
+                        ROOTSIZE_MIB="$ROOTSIZE_NUM"
+                    fi
+
+                    ROOT_END_MIB=$(awk "BEGIN { print $ROOTSIZE_MIB + 1025 }")
+                    break
+                else
+                    info_print "Let's try again."
+                    continue
+                fi
+            else
+                # Valid and in range
+
+                # Handle partition size for later.
+                if [[ "$ROOTSIZE_UNIT" == GiB ]]; then
+                    ROOTSIZE_MIB=$(awk "BEGIN { print $ROOTSIZE_NUM * 1024 }")
+                else
+                    ROOTSIZE_MIB="$ROOTSIZE_NUM"
+                fi
+
+                ROOT_END_MIB=$(awk "BEGIN { print $ROOTSIZE_MIB + 1025 }")
+                break
+            fi
+        else
+            error_print "Invalid syntax. Please enter a size like 20GiB or 20480MiB."
+        fi
+    done
 else
-    info_print "Home partition will not be seperated."
+    SEPERATE_PARTITIONS = false
+    info_print "Home partition will not be separated."
 fi
 
 # Creating a new partition scheme.
 info_print "Creating new partitions on $DISK."
-parted -s "$DISK" \
 
-    mklabel gpt \
-    mkpart ESP fat32 1MiB 1025MiB \
-    set 1 esp on \
-    mkpart ROOT ext4 1025MiB "$ROOTSIZE"\
-    mkpart CRYPTROOT  100% \
+if [ "$SEPERATE_PARTITIONS" = true ]; then
+
+    parted -s "$DISK" \
+
+        mklabel gpt \
+        mkpart ESP fat32 1MiB 1025MiB \
+        set 1 esp on \
+        mkpart ROOT ext4 1025MiB "${ROOT_END_MIB}MiB"\
+        mkpart HOME ext4 "${ROOT_END_MIB}MiB" 100% \
+
+    HOME="/dev/disk/by-partlabel/HOME"
+else
+
+    parted -s "$DISK" \
+
+        mklabel gpt \
+        mkpart ESP fat32 1MiB 1025MiB \
+        set 1 esp on \
+        mkpart ROOT ext4 1025MiB 100%\
+fi
 
 ESP="/dev/disk/by-partlabel/ESP"
-CRYPTROOT="/dev/disk/by-partlabel/CRYPTROOT"
+ROOT="/dev/disk/by-partlabel/ROOT"
+
 
 # Informing the Kernel of the changes.
 info_print "Informing the Kernel about the disk changes."
 partprobe "$DISK"
 
-# Formatting the ESP as FAT32.
+# Formatting the partitions
 info_print "Formatting the EFI Partition as FAT32."
 mkfs.fat -F 32 "$ESP" &>/dev/null
+info_print "Formatting the Root Partition as ext4"
+mkfs.ext4 "$ROOT" &>/dev/null
+if [ "$SEPERATE_PARTITIONS" = true ]; then
+    info_print "Formatting the Home Partition as ext4"
+    mkfs.ext4 "$HOME" &>/dev/null
+fi
 
 # Mounting the newly created subvolumes.
 umount /mnt
-info_print "Mounting the newly created subvolumes."
-mountopts="ssd,noatime,compress-force=zstd:3,discard=async"
-mount -o "$mountopts",subvol=@ "$BTRFS" /mnt
-mkdir -p /mnt/{home,root,srv,.snapshots,var/{log,cache/pacman/pkg},boot}
-for subvol in "${subvols[@]:2}"; do
-    mount -o "$mountopts",subvol=@"$subvol" "$BTRFS" /mnt/"${subvol//_//}"
-done
-chmod 750 /mnt/root
-mount -o "$mountopts",subvol=@snapshots "$BTRFS" /mnt/.snapshots
-mount -o "$mountopts",subvol=@var_pkgs "$BTRFS" /mnt/var/cache/pacman/pkg
-chattr +C /mnt/var/log
-mount "$ESP" /mnt/boot/
+info_print "Mounting the newly created partitions."
+mount "$ESP" /mnt/boot
+mount "$ROOT" /mnt
+if [ "$SEPERATE_PARTITIONS" = true ]; then
+    mount "$HOME" /mnt/home
+fi
 
 # Checking the microcode to install.
 microcode_detector
 
 # Pacstrap (setting up a base sytem onto the new root).
 info_print "Installing the base system (this might take a while)."
-pacstrap -K /mnt base "$kernel" "$microcode" linux-firmware "$kernel"-headers btrfs-progs grub grub-btrfs rsync efibootmgr snapper reflector snap-pac zram-generator sudo &>/dev/null
+pacstrap -K /mnt base "$kernel" "$microcode" linux-firmware "$kernel"-headers pipewire grub rsync efibootmgr zram-generator sudo nano htop wget &>/dev/null
 
 # Setting up the hostname.
 echo "$hostname" > /mnt/etc/hostname
@@ -362,7 +480,7 @@ HOOKS=(systemd autodetect keyboard sd-vconsole modconf block sd-encrypt filesyst
 EOF
 
 # Configuring the system.
-info_print "Configuring the system (timezone, system clock, initramfs, Snapper, GRUB)."
+info_print "Configuring the system (timezone, system clock, initramfs, GRUB)."
 arch-chroot /mnt /bin/bash -e <<EOF
 
     # Setting up timezone.
@@ -376,15 +494,6 @@ arch-chroot /mnt /bin/bash -e <<EOF
 
     # Generating a new initramfs.
     mkinitcpio -P &>/dev/null
-
-    # Snapper configuration.
-    umount /.snapshots
-    rm -r /.snapshots
-    snapper --no-dbus -c root create-config /
-    btrfs subvolume delete /.snapshots &>/dev/null
-    mkdir /.snapshots
-    mount -a &>/dev/null
-    chmod 750 /.snapshots
 
     # Installing GRUB.
     grub-install --target=x86_64-efi --efi-directory=/boot/ --bootloader-id=GRUB &>/dev/null
@@ -436,13 +545,8 @@ EOF
 info_print "Enabling colours, animations, and parallel downloads for pacman."
 sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /mnt/etc/pacman.conf
 
-# Enabling various services.
-info_print "Enabling Reflector, automatic snapshots, BTRFS scrubbing and systemd-oomd."
-services=(reflector.timer snapper-timeline.timer snapper-cleanup.timer btrfs-scrub@-.timer btrfs-scrub@home.timer btrfs-scrub@var-log.timer btrfs-scrub@\\x2esnapshots.timer grub-btrfsd.service systemd-oomd)
-for service in "${services[@]}"; do
-    systemctl enable "$service" --root=/mnt &>/dev/null
-done
-
 # Finishing up.
-info_print "Done, you may now wish to reboot (further changes can be done by chrooting into /mnt)."
+info_print "System installation complete."
+info_print "ChalkArch will now exit. You may reboot, or chroot into /mnt to configure the newly installed system."
+
 exit
