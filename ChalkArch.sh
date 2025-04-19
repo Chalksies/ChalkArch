@@ -380,7 +380,7 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
         fi
     done
 else
-    SEPERATE_PARTITIONS = false
+    SEPERATE_PARTITIONS=false
     info_print "Home partition will not be separated."
 fi
 
@@ -390,7 +390,6 @@ info_print "Creating new partitions on $DISK."
 if [ "$SEPERATE_PARTITIONS" = true ]; then
 
     parted -s "$DISK" \
-
         mklabel gpt \
         mkpart ESP fat32 1MiB 1025MiB \
         set 1 esp on \
@@ -405,7 +404,6 @@ if [ "$SEPERATE_PARTITIONS" = true ]; then
 else
 
     parted -s "$DISK" \
-
         mklabel gpt \
         mkpart ESP fat32 1MiB 1025MiB \
         set 1 esp on \
