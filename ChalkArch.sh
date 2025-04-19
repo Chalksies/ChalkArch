@@ -367,9 +367,9 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
 
                 # Handle partition size for later.
                 if [[ "$ROOTSIZE_UNIT" == GiB ]]; then
-                    ROOTSIZE_MIB=$(awk "BEGIN { print $ROOTSIZE_NUM * 1024 }")
+                    ROOTSIZE_MIB=$(awk "BEGIN { print $SIZE_NUM * 1024 }")
                 else
-                    ROOTSIZE_MIB="$ROOTSIZE_NUM"
+                    ROOTSIZE_MIB="$SIZE_NUM"
                 fi
 
                 ROOT_END_MIB=$(awk "BEGIN { print $ROOTSIZE_MIB + 1025 }")
