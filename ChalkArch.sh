@@ -436,11 +436,12 @@ fi
 
 # Mounting the newly created subvolumes.
 umount /mnt
+info_print "Root is $ROOT"
 info_print "Mounting the newly created partitions."
-mount "$ESP" /mnt/boot
 mount "$ROOT" /mnt
+mount --mkdir "$ESP" /mnt/boot
 if [ "$SEPERATE_PARTITIONS" = true ]; then
-    mount "$HOME" /mnt/home
+    mount --mkdir "$HOME" /mnt/home
 fi
 
 # Checking the microcode to install.
