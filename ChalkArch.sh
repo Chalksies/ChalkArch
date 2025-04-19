@@ -395,7 +395,7 @@ if [ "$SEPERATE_PARTITIONS" = true ]; then
         mkpart ESP fat32 1MiB 1025MiB \
         set 1 esp on \
         mkpart ROOT ext4 1025MiB "${ROOT_END_MIB}MiB"\
-        mkpart HOME ext4 "${ROOT_END_MIB}MiB" 100% \
+        mkpart HOME ext4 "${ROOT_END_MIB}MiB" 100% 
 
     HOME="/dev/disk/by-partlabel/HOME"
 else
@@ -405,7 +405,7 @@ else
         mklabel gpt \
         mkpart ESP fat32 1MiB 1025MiB \
         set 1 esp on \
-        mkpart ROOT ext4 1025MiB 100%\
+        mkpart ROOT ext4 1025MiB 100%
 fi
 
 ESP="/dev/disk/by-partlabel/ESP"
