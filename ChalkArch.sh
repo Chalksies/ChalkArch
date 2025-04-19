@@ -351,9 +351,9 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
 
                     # Handle partition size for later.
                     if [[ "$ROOTSIZE_UNIT" == GiB ]]; then
-                        ROOTSIZE_MIB=$(awk "BEGIN { print $ROOTSIZE_NUM * 1024 }")
+                        ROOTSIZE_MIB=$(awk "BEGIN { print $SIZE_NUM * 1024 }")
                     else
-                        ROOTSIZE_MIB="$ROOTSIZE_NUM"
+                        ROOTSIZE_MIB="$SIZE_NUM"
                     fi
 
                     ROOT_END_MIB=$(awk "BEGIN { print $ROOTSIZE_MIB + 1025 }")
@@ -424,12 +424,12 @@ partprobe "$DISK"
 
 # Formatting the partitions
 info_print "Formatting the EFI Partition as FAT32."
-mkfs.fat -F 32 "$ESP" &>/dev/null
+mkfs.fat -F 32 "$ESP"
 info_print "Formatting the Root Partition as ext4"
-mkfs.ext4 "$ROOT" &>/dev/null
+mkfs.ext4 "$ROOT"
 if [ "$SEPERATE_PARTITIONS" = true ]; then
     info_print "Formatting the Home Partition as ext4"
-    mkfs.ext4 "$HOME" &>/dev/null
+    mkfs.ext4 "$HOME"
 fi
 
 # Mounting the newly created subvolumes.
