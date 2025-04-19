@@ -401,7 +401,7 @@ if [ "$SEPERATE_PARTITIONS" = true ]; then
         name 3 HOME
 
     udevadm settle
-    HOME=$(blkid -L HOME)
+    HOME=$(lsblk -o PATH,PARTLABEL | awk '$2 == "HOME" { print $1 }')
 else
 
     parted -s "$DISK" \
@@ -416,8 +416,8 @@ else
     udevadm settle
 fi
 
-ESP=$(blkid -L ESP)
-ROOT=$(blkid -L ROOT)
+ESP=$(lsblk -o PATH,PARTLABEL | awk '$2 == "ESP" { print $1 }')
+ROOT=$(lsblk -o PATH,PARTLABEL | awk '$2 == "ROOT" { print $1 }')
 
 
 # Informing the Kernel of the changes.
