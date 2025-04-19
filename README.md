@@ -1,10 +1,7 @@
 # ChalkArch
 
-----------------------------------------------------------------------------------------
-
 ## CURRENTLY WIP, DO NOT USE. WILL NUKE YOUR SYSTEM AND CRASH
 
-----------------------------------------------------------------------------------------
 An Arch Linux installer script written in bash. To use, connect to the internet in the live iso and:
 
 ```
