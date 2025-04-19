@@ -394,10 +394,14 @@ if [ "$SEPERATE_PARTITIONS" = true ]; then
         mklabel gpt \
         mkpart ESP fat32 1MiB 1025MiB \
         set 1 esp on \
+        name 1 ESP \
         mkpart ROOT ext4 1025MiB "${ROOT_END_MIB}MiB"\
-        mkpart HOME ext4 "${ROOT_END_MIB}MiB" 100% 
+        name 2 ROOT \
+        mkpart HOME ext4 "${ROOT_END_MIB}MiB" 100% \
+        name 3 HOME
 
-    HOME="/dev/disk/by-partlabel/HOME"
+    udevadm settle
+    HOME=$(blkid -L HOME)
 else
 
     parted -s "$DISK" \
@@ -405,11 +409,15 @@ else
         mklabel gpt \
         mkpart ESP fat32 1MiB 1025MiB \
         set 1 esp on \
-        mkpart ROOT ext4 1025MiB 100%
+        name 1 ESP \
+        mkpart ROOT ext4 1025MiB 100% \
+        name 2 ROOT 
+
+    udevadm settle
 fi
 
-ESP="/dev/disk/by-partlabel/ESP"
-ROOT="/dev/disk/by-partlabel/ROOT"
+ESP=$(blkid -L ESP)
+ROOT=$(blkid -L ROOT)
 
 
 # Informing the Kernel of the changes.
