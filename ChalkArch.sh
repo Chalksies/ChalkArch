@@ -340,13 +340,13 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
                 SIZE_GIB="$SIZE_NUM"
             fi
 
-            echo "sizeGib: $SIZE_GIB"
+            echo "sizeGiB: $SIZE_GIB"
             sleep 3s
 
             SIZE_GIB_CLEAN=$(echo "$SIZE_GIB" | tr -d '[:space:]')
 
-            echo "sizeGibClean: $SIZE_GIB_CLEAN"
-            sleep 3s
+            #echo "sizeGiBClean: $SIZE_GIB_CLEAN"
+            #sleep 3s
 
             if [[ "$SIZE_GIB_CLEAN" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
                 SIZE_GIB_INT=$(printf "%.0f" "$SIZE_GIB_CLEAN")
@@ -390,6 +390,7 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
                 fi
 
                 echo "rootSizeMiB: $ROOTSIZE_MIB"
+                sleep 3
 
                 ROOT_END_MIB=$(awk "BEGIN { print $ROOTSIZE_MIB + 1025 }")
                 break
