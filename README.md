@@ -5,6 +5,7 @@
 An Arch Linux installer script written in bash. To use, connect to the internet in the live iso and:
 
 ```
+pacman -Sy
 pacman -S git
 git clone https://github.com/Chalksies/ChalkArch
 cd ChalkArch
