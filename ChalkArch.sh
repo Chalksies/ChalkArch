@@ -367,7 +367,7 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
                     # Accept out-of-range value
 
                     # Handle partition size for later.
-                    if [[ "$ROOTSIZE_UNIT" == "GiB" ]]; then
+                    if [[ "$SIZE_UNIT" == "GiB" ]]; then
                         ROOTSIZE_MIB=$(awk "BEGIN { print $SIZE_NUM * 1024 }")
                     else
                         ROOTSIZE_MIB="$SIZE_NUM"
@@ -383,7 +383,7 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
                 # Valid and in range
 
                 # Handle partition size for later.
-                if [[ "$ROOTSIZE_UNIT" == "GiB" ]]; then
+                if [[ "$SIZE_UNIT" == "GiB" ]]; then
 
                     echo "if condition succeded."
                     sleep 1
