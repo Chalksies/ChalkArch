@@ -261,6 +261,26 @@ environment_selector () {
     done
 }
 
+soundserver_selector () {
+    info_print "Choose an audio server to install:"
+    PS3="Enter the number of your choice: "
+
+    options=("PipeWire" "PulseAudio" "[None]")
+    select de in "${options[@]}"; do
+        case $REPLY in
+            1) SOUND_SERVER="pipewire pipewire-alsa wireplumber pipewire-pulse pipewire-jack gst-plugin-pipewire libpulse"; break ;;
+            2) SOUND_SERVER="pulseaudio pulseaudio-bluetooth pulseaudio-equalizer pulseaudio-jack pulseaudio-lirc pulseaudio-zeroconf"; break ;;
+            3) SOUND_SERVER=""; break ;;
+            *) echo "Invalid option. Please try again." ;;
+        esac
+    done
+}
+
+
+chroot_exec() {
+    arch-chroot /mnt /bin/bash -c "$1"
+}
+
 
 # Script start
 echo -ne "${BOLD}${BPURPLE}
@@ -307,7 +327,9 @@ until hostname_selector; do : ; done
 until userpass_selector; do : ; done
 until rootpass_selector; do : ; done
 
-input_print "The installer will now completely remove the current partition table on $DISK. This operation will remove all of your data and cannot be undone. Proceed? [y/N]:"
+clear
+
+input_print "The installer will now remove the current partition table on $DISK. This operation will remove all data on $DISK and cannot be undone. Proceed? [y/N]:"
 read -r disk_response
 if ! [[ "${disk_response,,}" =~ ^(yes|y)$ ]]; then
     error_print "Aborting install."
@@ -449,22 +471,22 @@ partprobe "$DISK"
 
 # Formatting the partitions
 info_print "Formatting the EFI Partition as FAT32."
-mkfs.fat -F 32 "$ESP"
+mkfs.fat -F 32 "$ESP" &>/dev/null
 info_print "Formatting the Root Partition as ext4"
-mkfs.ext4 "$ROOT"
+mkfs.ext4 "$ROOT" &>/dev/null
 if [ "$SEPERATE_PARTITIONS" = true ]; then
     info_print "Formatting the Home Partition as ext4"
-    mkfs.ext4 "$HOME"
+    mkfs.ext4 "$HOME" &>/dev/null
 fi
 
 # Mounting the newly created subvolumes.
-umount /mnt
+umount /mnt &>/dev/null
 info_print "Root is $ROOT"
 info_print "Mounting the newly created partitions."
-mount "$ROOT" /mnt
-mount --mkdir "$ESP" /mnt/boot
+mount "$ROOT" /mnt &>/dev/null
+mount --mkdir "$ESP" /mnt/boot &>/dev/null
 if [ "$SEPERATE_PARTITIONS" = true ]; then
-    mount --mkdir "$HOME" /mnt/home
+    mount --mkdir "$HOME" /mnt/home &>/dev/null
 fi
 
 # Checking the microcode to install.
@@ -474,8 +496,32 @@ microcode_detector
 info_print "Installing the base system (this might take a while)."
 pacstrap -K /mnt base "$kernel" "$microcode" linux-firmware "$kernel"-headers pipewire grub rsync efibootmgr zram-generator sudo nano htop wget &>/dev/null
 
-info_print "Installing DE/WM of choice (if chosen)"
-pacstrap -K /mnt base "$DESKTOP_ENV" &>/dev/null
+
+if [ -n "$DESKTOP_ENV"]; then
+    info_print "Installing DE/WM of choice and additional packages (this might take a while)"
+    chroot_exec "pacman -S --noconfirm $DESKTOP_ENV &>/dev/null"
+
+
+    if [[ "$DESKTOP_ENV" == *"gdm"* ]]; then
+        info_print "Enabling display manager."
+        chroot_exec "systemctl enable gdm"
+
+    elif [[ "$DESKTOP_ENV" == *"sddm"* ]]; then
+        info_print "Enabling display manager."
+        chroot_exec "systemctl enable sddm"
+
+    elif [[ "$DESKTOP_ENV" == *"lightdm"* ]]; then
+        info_print "Enabling display manager."
+        chroot_exec "systemctl enable lightdm"
+
+    fi
+fi
+
+if [ -n "$SOUND_SERVER"]; then
+    info_print "Installing audio server."
+    chroot_exec "pacman -S --noconfirm $SOUND_SERVER &>/dev/null"
+fi
+
 
 # Setting up the hostname.
 echo "$hostname" > /mnt/etc/hostname
