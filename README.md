@@ -1,6 +1,6 @@
 # ChalkArch
 
-## CURRENTLY WIP, DO NOT USE. WILL NUKE YOUR SYSTEM AND CRASH
+## CURRENTLY WIP, DO NOT TRUST IT TO INSTALL A DAILY DRIVER (IT CAN, BUT STILL.)
 
 An Arch Linux installer script written in bash. To use, connect to the internet in the live iso and:
 

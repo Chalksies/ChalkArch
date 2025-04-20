@@ -329,9 +329,9 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
             SIZE_NUM=$(echo "$ROOTSIZE" | sed -E 's/^([0-9]+)(GiB|MiB)$/\1/')
             SIZE_UNIT=$(echo "$ROOTSIZE" | sed -E 's/^([0-9]+)(GiB|MiB)$/\2/')
 
-            echo "sizeNum: $SIZE_NUM"
-            echo "sizeUnit: $SIZE_UNIT"
-            sleep 3s
+            #echo "sizeNum: $SIZE_NUM"
+            #echo "sizeUnit: $SIZE_UNIT"
+            #sleep 3s
 
             # Convert to GiB for checking
             if [[ "$SIZE_UNIT" == "MiB" ]]; then
@@ -340,8 +340,8 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
                 SIZE_GIB="$SIZE_NUM"
             fi
 
-            echo "sizeGiB: $SIZE_GIB"
-            sleep 3s
+            #echo "sizeGiB: $SIZE_GIB"
+            #sleep 3s
 
             SIZE_GIB_CLEAN=$(echo "$SIZE_GIB" | tr -d '[:space:]')
 
@@ -355,8 +355,8 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
                 continue
             fi
 
-            echo "sizeGinbInt: $SIZE_GIB_INT"
-            sleep 3s
+            #echo "sizeGinbInt: $SIZE_GIB_INT"
+            #sleep 3s
 
             # Check if it's within range
             if (( SIZE_GIB_INT < 25 || SIZE_GIB_INT > 50 )); then
@@ -394,8 +394,8 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
                     ROOTSIZE_MIB="$SIZE_NUM"
                 fi
 
-                echo "rootSizeMiB: $ROOTSIZE_MIB"
-                sleep 3
+                #echo "rootSizeMiB: $ROOTSIZE_MIB"
+                #sleep 3
 
                 ROOT_END_MIB=$(awk "BEGIN { print $ROOTSIZE_MIB + 1025 }")
                 break
