@@ -55,10 +55,12 @@ virt_check () {
 # Selecting a kernel to install (function).
 kernel_selector () {
     info_print "List of kernels:"
+    info_print "-----------------------------------------------------------------------------------------------------------------------"
     info_print "1) Stable: Vanilla Linux kernel with a few specific Arch Linux patches applied"
     info_print "2) Hardened: A security-focused Linux kernel"
     info_print "3) Longterm: Long-term support (LTS) Linux kernel"
     info_print "4) Zen Kernel: A Linux kernel optimized for desktop usage"
+    info_print "-----------------------------------------------------------------------------------------------------------------------"
     input_print "Please select the number of the corresponding kernel (e.g. 1): " 
     read -r kernel_choice
     case $kernel_choice in
@@ -78,11 +80,13 @@ kernel_selector () {
 # Selecting a way to handle internet connection (function).
 network_selector () {
     info_print "Network utilities:"
+    info_print "-----------------------------------------------------------------------------------------------------------------------"
     info_print "1) IWD: Utility to connect to networks written by Intel (WiFi-only, built-in DHCP client)"
     info_print "2) NetworkManager: Universal network utility (both WiFi and Ethernet, highly recommended)"
     info_print "3) wpa_supplicant: Utility with support for WEP and WPA/WPA2 (WiFi-only, DHCPCD will be automatically installed)"
     info_print "4) dhcpcd: Basic DHCP client (Ethernet connections or VMs)"
     info_print "5) I will do this on my own (only advanced users)"
+    info_print "-----------------------------------------------------------------------------------------------------------------------"
     input_print "Please select the number of the corresponding networking utility (e.g. 1): "
     read -r network_choice
     if ! ((1 <= network_choice <= 5)); then
@@ -325,6 +329,10 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
             SIZE_NUM=$(echo "$ROOTSIZE" | sed -E 's/^([0-9]+)(GiB|MiB)$/\1/')
             SIZE_UNIT=$(echo "$ROOTSIZE" | sed -E 's/^([0-9]+)(GiB|MiB)$/\2/')
 
+            echo "sizeNum: $SIZE_NUM"
+            echo "sizeUnit: $SIZE_UNIT"
+            sleep 3s
+
             # Convert to GiB for checking
             if [[ "$SIZE_UNIT" == "MiB" ]]; then
                 SIZE_GIB=$(awk "BEGIN { printf \"%.2f\", $SIZE_NUM / 1024 }")
@@ -332,7 +340,13 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
                 SIZE_GIB="$SIZE_NUM"
             fi
 
+            echo "sizeGib: $SIZE_GIB"
+            sleep 3s
+
             SIZE_GIB_CLEAN=$(echo "$SIZE_GIB" | tr -d '[:space:]')
+
+            echo "sizeGibClean: $SIZE_GIB_CLEAN"
+            sleep 3s
 
             if [[ "$SIZE_GIB_CLEAN" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
                 SIZE_GIB_INT=$(printf "%.0f" "$SIZE_GIB_CLEAN")
@@ -340,6 +354,9 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
                 error_print "Unexpected error parsing size. Please try again."
                 continue
             fi
+
+            echo "sizeGinbInt: $SIZE_GIB_INT"
+            sleep 3s
 
             # Check if it's within range
             if (( SIZE_GIB_INT < 25 || SIZE_GIB_INT > 50 )); then
@@ -371,6 +388,8 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
                 else
                     ROOTSIZE_MIB="$SIZE_NUM"
                 fi
+
+                echo "rootSizeMiB: $ROOTSIZE_MIB"
 
                 ROOT_END_MIB=$(awk "BEGIN { print $ROOTSIZE_MIB + 1025 }")
                 break
