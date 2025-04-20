@@ -384,8 +384,13 @@ if ! [[ "${home_partition_setting}" =~ ^(no|n|No|N)$ ]]; then
 
                 # Handle partition size for later.
                 if [[ "$ROOTSIZE_UNIT" == "GiB" ]]; then
-                    ROOTSIZE_MIB=$(awk "BEGIN { print $SIZE_NUM * 1024 }")
+
+                    echo "if condition succeded."
+                    sleep 1
+                    ROOTSIZE_MIB=$(awk -v s="$SIZE_NUM" 'BEGIN { print s * 1024 }')
                 else
+                    echo "if condition failed."
+                    sleep 1
                     ROOTSIZE_MIB="$SIZE_NUM"
                 fi
 
