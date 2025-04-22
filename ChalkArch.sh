@@ -9,21 +9,22 @@ BBLUE='\e[34m'
 BGREEN='\e[92m'
 BYELLOW='\e[93m'
 BPURPLE='\e[95m'
+BCYAN='\e[36m'
 RESET='\e[0m'
 
 # Pretty print (function).
 info_print () {
-    echo -e "${BOLD}${BGREEN}| ${BYELLOW}+${BGREEN} | $1${RESET}"
+    echo -e "${BOLD}${BGREEN}[ ${BYELLOW}•${BGREEN} > $1${RESET}"
 }
 
 # Pretty print for input (function).
 input_print () {
-    echo -ne "${BOLD}${BYELLOW}| ${BGREEN}+${BYELLOW} | $1${RESET}"
+    echo -ne "${BOLD}${BCYAN}[ ${BGREEN}•${BCYAN} > $1${RESET}"
 }
 
 # Alert user of bad input (function).
 error_print () {
-    echo -e "${BOLD}${BRED}| ${BBLUE}+${BRED} | $1${RESET}"
+    echo -e "${BOLD}${BRED}[ ${BBLUE}•${BRED} > $1${RESET}"
 }
 
 # Virtualization check (function).
@@ -497,7 +498,7 @@ info_print "Installing the base system (this might take a while)."
 pacstrap -K /mnt base "$kernel" "$microcode" linux-firmware "$kernel"-headers pipewire grub rsync efibootmgr zram-generator sudo nano htop wget &>/dev/null
 
 
-if [ -n "$DESKTOP_ENV"]; then
+if [[ -n "$DESKTOP_ENV"]]; then
     info_print "Installing DE/WM of choice and additional packages (this might take a while)"
     chroot_exec "pacman -S --noconfirm $DESKTOP_ENV &>/dev/null"
 
