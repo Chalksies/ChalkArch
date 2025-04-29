@@ -622,6 +622,8 @@ EOF
 info_print "Enabling colours, animations, and parallel downloads for pacman."
 sed -Ei 's/^#(Color)$/\1\nILoveCandy/;s/^#(ParallelDownloads).*/\1 = 10/' /mnt/etc/pacman.conf
 
+chroot_exec "xdg-user-dirs-update &>/dev/null"
+
 # Finishing up.
 info_print "System installation complete."
 info_print "ChalkArch will now exit. You may reboot, or chroot into /mnt to configure the newly installed system."
